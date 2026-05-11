@@ -4,9 +4,7 @@
 
 1. Создал [Deployment из двух контейнеров](deployment.yml)
 2. Применил деплоймент
-3. describe pods
-
-describe pods:
+3. describe pods:
 
 ```
 alex@uxtu-note:~/Study/kuber5/kuber5$ kubectl describe pods vol-app
