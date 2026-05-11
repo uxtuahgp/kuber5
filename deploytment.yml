@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vol-app
+  labels:
+    app: vol-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vol-app
+  template:
+    metadata:
+      labels:
+        app: vol-app
+    spec:
+      containers:
+        - name: bbox
+          image: busybox:latest
+          command:
+            [
+              "sh",
+              "-c",
+              "until 1==2 ; do sleep 5; date >> /common/datefile.html; done",
+            ]
+          volumeMounts:
+            - name: common-vol
+              mountPath: /common
+
+        - name: mtool
+          image: wbitt/network-multitool
+          volumeMounts:
+            - name: common-vol
+              mountPath: /common
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "HTTP_PORT"
+              value: "8080"
+      volumes:
+        - name: common-vol
+          emptyDir:
+            sizeLimit: 500Mi
