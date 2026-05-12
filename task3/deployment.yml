@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vol-app
+  labels:
+    app: vol-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vol-app
+  template:
+    metadata:
+      labels:
+        app: vol-app
+    spec:
+      #      nodeSelector:
+      #        kubernetes.io/hostname: uxtu-note
+      containers:
+        - name: bbox
+          image: busybox:latest
+          command:
+            [
+              "sh",
+              "-c",
+              "until 1==2 ; do sleep 5; date >> /common/datefile.html; done",
+            ]
+          volumeMounts:
+            - name: pvc-vol
+              mountPath: /common
+
+        - name: mtool
+          image: wbitt/network-multitool
+          volumeMounts:
+            - name: pvc-vol
+              mountPath: /common
+      volumes:
+        - name: pvc-vol
+          persistentVolumeClaim:
+            claimName: my-pvc

@@ -201,8 +201,8 @@ alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
 -rw-r--r-- 1 root root 6206 мая 12 14:27 datefile.html
 ```
 
-Данные не удалены, так как для HostPath удаление работает только с путями по регулярному выражению /tmp/.+.
-Удалил PV и проверил состояние файла данных на локальной файловой системе
+Данные не удалены, так как для HostPath удаление работает только с путями по регулярному выражению /tmp/.+.  
+Удалил PV и проверил состояние файла данных на локальной файловой системе  
 
 ```
 alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl delete pv my-pv
@@ -216,4 +216,6 @@ alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
 
 ### Задание 3 ###  
 
-
+1. Создал и применил [манифест для deployment](task3/deployment.yml)  
+2. Создал и применил манифесты для [StorageClass](task3/sc.yml) и [PersistentVolumeClaim](task3/pvc.yml)  
+Однако, PVC не работает, так как при использованиии kubernetes.io/no-provisioner PV автоматически не создается, а других провайдеров 

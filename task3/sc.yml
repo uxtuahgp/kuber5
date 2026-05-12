@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: my-sc
+provisioner: microk8s.io/hostpath
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  pvDir: /home/alex/Study/kuber5/kuber5/task3/common
