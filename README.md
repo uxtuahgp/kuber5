@@ -202,7 +202,7 @@ alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
 ```
 
 Данные не удалены, так как для HostPath удаление работает только с путями по регулярному выражению /tmp/.+.  
-Удалил PV и проверил состояние файла данных на локальной файловой системе  
+Удалил PV и проверил состояние файла данных на локальной файловой системе
 
 ```
 alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl delete pv my-pv
@@ -212,10 +212,99 @@ alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
 -rw-r--r-- 1 root root 6206 мая 12 14:27 datefile.html
 ```
 
-После удаления PV файл данных по прежнему остался на месте, так как HostPath по умолчанию не поддерживает удаление данных при удалении PV.  
+После удаления PV файл данных по прежнему остался на месте, так как HostPath по умолчанию не поддерживает удаление данных при удалении PV.
 
-### Задание 3 ###  
+### Задание 3
 
-1. Создал и применил [манифест для deployment](task3/deployment.yml)  
-2. Создал и применил манифесты для [StorageClass](task3/sc.yml) и [PersistentVolumeClaim](task3/pvc.yml)  
-Однако, PVC не работает, так как при использованиии kubernetes.io/no-provisioner PV автоматически не создается, а других провайдеров 
+1. Создал и применил [манифест для deployment](task3/deployment.yml)
+2. Создал и применил манифесты для [StorageClass](task3/sc.yml) и [PersistentVolumeClaim](task3/pvc.yml)
+   Предварительно пришлось разрешить провайдера microk8s/hostpath
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ microk8s enable hostpath-storage
+Infer repository core for addon hostpath-storage
+Enabling default storage class.
+WARNING: Hostpath storage is not suitable for production environments.
+         A hostpath volume can grow beyond the size limit set in the volume claim manifest.
+
+deployment.apps/hostpath-provisioner created
+storageclass.storage.k8s.io/microk8s-hostpath created
+serviceaccount/microk8s-hostpath created
+clusterrole.rbac.authorization.k8s.io/microk8s-hostpath created
+clusterrolebinding.rbac.authorization.k8s.io/microk8s-hostpath created
+Storage will be available soon.
+```
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl apply -f sc.yml
+storageclass.storage.k8s.io/my-sc created
+lex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl apply -f pvc.yml
+persistentvolumeclaim/my-pvc created
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl describe pvc
+Name:          my-pvc
+Namespace:     default
+StorageClass:  my-sc
+Status:        Pending
+Volume:
+Labels:        <none>
+Annotations:   <none>
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:
+Access Modes:
+VolumeMode:    Filesystem
+Used By:       vol-app-67c6c67d75-h9g2p
+Events:
+  Type    Reason               Age              From                         Message
+  ----    ------               ----             ----                         -------
+  Normal  WaitForPodScheduled  0s (x2 over 2s)  persistentvolume-controller  waiting for pod vol-app-67c6c67d75-h9g2p to be scheduled
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl describe sc
+Name:            microk8s-hostpath
+IsDefaultClass:  Yes
+Annotations:     kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"},"name":"microk8s-hostpath"},"provisioner":"microk8s.io/hostpath","reclaimPolicy":"Delete","volumeBindingMode":"WaitForFirstConsumer"}
+,storageclass.kubernetes.io/is-default-class=true
+Provisioner:           microk8s.io/hostpath
+Parameters:            <none>
+AllowVolumeExpansion:  <unset>
+MountOptions:          <none>
+ReclaimPolicy:         Delete
+VolumeBindingMode:     WaitForFirstConsumer
+Events:                <none>
+
+
+Name:            my-sc
+IsDefaultClass:  No
+Annotations:     kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{},"name":"my-sc"},"parameters":{"pvDir":"/home/alex/Study/kuber5/kuber5/task3/common"},"provisioner":"microk8s.io/hostpath","volumeBindingMode":"WaitForFirstConsumer"}
+
+Provisioner:           microk8s.io/hostpath
+Parameters:            pvDir=/home/alex/Study/kuber5/kuber5/task3/common
+AllowVolumeExpansion:  <unset>
+MountOptions:          <none>
+ReclaimPolicy:         Delete
+VolumeBindingMode:     WaitForFirstConsumer
+Events:                <none>
+
+```
+
+3. Проверил доступность неявно определенного PV для подов bbox и mtool
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+vol-app-67c6c67d75-h9g2p   2/2     Running   0          67s
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl exec -it --container mtool -- bash
+error: pod, type/name or --filename must be specified
+alex@uxtu-note:~/Study/kuber5/kuber5/task3$ kubectl exec -it vol-app-67c6c67d75-h9g2p --container mtool -- bash
+vol-app-67c6c67d75-h9g2p:/# tail -f /common/datefile.html
+Tue May 12 13:07:25 UTC 2026
+Tue May 12 13:07:30 UTC 2026
+Tue May 12 13:07:35 UTC 2026
+Tue May 12 13:07:40 UTC 2026
+Tue May 12 13:07:45 UTC 2026
+Tue May 12 13:07:50 UTC 2026
+Tue May 12 13:07:55 UTC 2026
+Tue May 12 13:08:00 UTC 2026
+Tue May 12 13:08:05 UTC 2026
+Tue May 12 13:08:10 UTC 2026
+Tue May 12 13:08:15 UTC 2026
+^C
+```
