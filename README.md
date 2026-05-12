@@ -116,3 +116,28 @@ Mon May 11 20:19:31 UTC 2026
 Mon May 11 20:19:36 UTC 2026
 Mon May 11 20:19:41 UTC 2026
 ```
+
+### Задание 2
+
+1. Создал [Deployment](task2/deployment.yml) из двух конетейнеров, использующих общий том из PersistentVolumeClaim my-pvc.
+2. Создал и применил манифест [persistentVolume my-pv](task2/pv.yml)
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl apply -f pv.yml
+persistentvolume/my-pv configured
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get persistentvolumes
+NAME    CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM            STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+my-pv   1Gi        RWO            Retain           Bound    default/my-pvc                  <unset>                          107s
+```
+
+3. Создал и применил манифест [PersistentVolumeClaim my-pvc](task2/pvc.yml)
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl apply -f pvc.yml
+persistentvolumeclaim/my-pvc created
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get persistentvolumeclaims
+NAME     STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+my-pvc   Pending                                                     <unset>                 4s
+```
+
+4.
