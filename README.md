@@ -192,3 +192,23 @@ Events:
   ----     ------              ----  ----                         -------
   Warning  VolumeFailedDelete  32s   persistentvolume-controller  host_path deleter only supports /tmp/.+ but received provided /home/alex/Study/kuber5/kuber5/task2/common
 ```
+
+5. Проверил, что после удаления клайма и деплоя файл данных остался на локальной файловой системе
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
+итого 8
+-rw-r--r-- 1 root root 6206 мая 12 14:27 datefile.html
+```
+
+Удалил PV и проверил состояние файла данных на локальной файловой системе
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl delete pv my-pv
+persistentvolume "my-pv" deleted
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ ls -l ./common/
+итого 8
+-rw-r--r-- 1 root root 6206 мая 12 14:27 datefile.html
+```
+
+После удаления PV файл данных по прежнему остался на месте, так как для HostPath удаление работает только с путями по регулярному выражению /tmp/.+.
