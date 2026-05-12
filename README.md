@@ -125,19 +125,70 @@ Mon May 11 20:19:41 UTC 2026
 ```
 alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl apply -f pv.yml
 persistentvolume/my-pv configured
-alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get persistentvolumes
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get pv
 NAME    CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM            STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
-my-pv   1Gi        RWO            Retain           Bound    default/my-pvc                  <unset>                          107s
+my-pv   1Gi        RWO            Delete           Bound    default/my-pvc   sc-local       <unset>                          19m
 ```
 
-3. Создал и применил манифест [PersistentVolumeClaim my-pvc](task2/pvc.yml)
+Создал и применил манифест [PersistentVolumeClaim my-pvc](task2/pvc.yml)
 
 ```
 alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl apply -f pvc.yml
 persistentvolumeclaim/my-pvc created
-alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get persistentvolumeclaims
-NAME     STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
-my-pvc   Pending                                                     <unset>                 4s
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get pvc
+NAME     STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+my-pvc   Bound    my-pv    1Gi        RWO            sc-local       <unset>                 19m
 ```
 
-4.
+3. Проверил доступность данных, записанных подом bbox в поде mtool
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl exec -it vol-app-d4997cf6f-m9g6p --container mtool -- bash
+vol-app-d4997cf6f-m9g6p:/# tail -f /common/datefile.html
+Tue May 12 11:11:12 UTC 2026
+Tue May 12 11:11:17 UTC 2026
+Tue May 12 11:11:22 UTC 2026
+Tue May 12 11:11:27 UTC 2026
+Tue May 12 11:11:32 UTC 2026
+Tue May 12 11:11:37 UTC 2026
+Tue May 12 11:11:42 UTC 2026
+Tue May 12 11:11:47 UTC 2026
+Tue May 12 11:11:52 UTC 2026
+Tue May 12 11:11:57 UTC 2026
+Tue May 12 11:12:02 UTC 2026
+^C
+```
+
+4. Удалил deployment и pvc и проверил состояние pv
+
+```
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl delete deploy vol-app
+deployment.apps "vol-app" deleted
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl delete pvc my-pvc
+persistentvolumeclaim "my-pvc" deleted
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl get pv
+NAME    CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM            STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+my-pv   1Gi        RWO            Delete           Failed   default/my-pvc   sc-local       <unset>                          23m
+alex@uxtu-note:~/Study/kuber5/kuber5/task2$ kubectl describe  pv
+Name:            my-pv
+Labels:          <none>
+Annotations:     pv.kubernetes.io/bound-by-controller: yes
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:    sc-local
+Status:          Failed
+Claim:           default/my-pvc
+Reclaim Policy:  Delete
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        1Gi
+Node Affinity:   <none>
+Message:         host_path deleter only supports /tmp/.+ but received provided /home/alex/Study/kuber5/kuber5/task2/common
+Source:
+    Type:          HostPath (bare host directory volume)
+    Path:          /home/alex/Study/kuber5/kuber5/task2/common
+    HostPathType:
+Events:
+  Type     Reason              Age   From                         Message
+  ----     ------              ----  ----                         -------
+  Warning  VolumeFailedDelete  32s   persistentvolume-controller  host_path deleter only supports /tmp/.+ but received provided /home/alex/Study/kuber5/kuber5/task2/common
+```

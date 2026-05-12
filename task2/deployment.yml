@@ -14,8 +14,8 @@ spec:
       labels:
         app: vol-app
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: uxtu-note
+      #      nodeSelector:
+      #        kubernetes.io/hostname: uxtu-note
       containers:
         - name: bbox
           image: busybox:latest
